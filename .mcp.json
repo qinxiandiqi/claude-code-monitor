@@ -1,0 +1,27 @@
+{
+  "mcpServers": {
+    "playwright": {
+      "command": "npx",
+      "args": [
+        "@playwright/mcp@latest"
+      ],
+      "env": {}
+    },
+    "context7": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@upstash/context7-mcp"
+      ],
+      "env": {}
+    },
+    "tauri": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "mcp-tauri-webdriver"
+      ],
+      "env": {}
+    }
+  }
+}
