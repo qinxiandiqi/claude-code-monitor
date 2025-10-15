@@ -1,5 +1,6 @@
 import { createProxyMiddleware } from 'http-proxy-middleware';
 import { IncomingMessage, ServerResponse } from 'http';
+import chalk from 'chalk';
 import { ApiMonitor } from './Monitor.js';
 
 export interface ProxyOptions {
@@ -41,6 +42,7 @@ export class ClaudeAPIProxy {
           path: req.url?.split('?')[0] || '/',
           headers: req.headers as Record<string, string>,
           startTime: (req as any).startTime,
+          timestamp: new Date(),
         };
 
         (req as any).requestId = this.monitor.recordRequest(requestData).id;

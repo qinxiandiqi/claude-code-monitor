@@ -6,7 +6,7 @@ import { RequestHistory } from '../components/RequestHistory.js';
 
 export const Dashboard: React.FC = () => {
   const { stats, requests, connectionStatus, clearRequests, reconnect } = useWebSocket(
-    `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}`
+    `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.hostname}:3002`
   );
 
   const formatNumber = (num: number) => {

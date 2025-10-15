@@ -17,10 +17,10 @@ const __dirname = dirname(__filename);
 
 class MonitorServer {
   private app: express.Application;
-  private server: any;
-  private wss: WebSocketServer;
+  private server: any = null;
+  private wss!: WebSocketServer;
   private monitor: ApiMonitor;
-  private proxy: ClaudeAPIProxy;
+  private proxy!: ClaudeAPIProxy;
   private config = {
     monitorPort: parseInt(process.env.MONITOR_PORT || '3002'),
     proxyPort: parseInt(process.env.PROXY_PORT || '3001'),
@@ -50,6 +50,7 @@ class MonitorServer {
         path: '/api/health',
         headers: req.headers as Record<string, string>,
         startTime: Date.now(),
+        timestamp: new Date(),
       }).id;
 
       const healthData = { status: 'ok', timestamp: new Date().toISOString() };
@@ -73,6 +74,7 @@ class MonitorServer {
         path: '/api/stats',
         headers: req.headers as Record<string, string>,
         startTime: Date.now(),
+        timestamp: new Date(),
       }).id;
 
       const stats = this.monitor.getStats();
@@ -96,6 +98,7 @@ class MonitorServer {
         path: '/api/requests',
         headers: req.headers as Record<string, string>,
         startTime: Date.now(),
+        timestamp: new Date(),
       }).id;
 
       const limit = parseInt(req.query.limit as string) || 50;
@@ -139,7 +142,7 @@ class MonitorServer {
   private setupWebSocket(): void {
     this.wss = new WebSocketServer({ server: this.server });
 
-    this.wss.on('connection', (ws: WebSocket) => {
+    this.wss.on('connection', (ws: any) => {
       console.log(chalk.blue('📱 New monitor client connected'));
       this.monitor.addWebSocketClient(ws);
 
@@ -157,7 +160,7 @@ class MonitorServer {
         this.monitor.removeWebSocketClient(ws);
       });
 
-      ws.on('error', (error) => {
+      ws.on('error', (error: any) => {
         console.error(chalk.red('WebSocket error:'), error);
         this.monitor.removeWebSocketClient(ws);
       });
