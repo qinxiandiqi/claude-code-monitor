@@ -91,6 +91,31 @@ class MonitorServer {
       res.json(stats);
     });
 
+    // 新增：详细统计API端点
+    this.app.get('/api/detailed-stats', (req, res) => {
+      const requestId = this.monitor.recordRequest({
+        method: 'GET',
+        url: '/api/detailed-stats',
+        path: '/api/detailed-stats',
+        headers: req.headers as Record<string, string>,
+        startTime: Date.now(),
+        timestamp: new Date(),
+      }).id;
+
+      const detailedStats = this.monitor.getDetailedStats();
+
+      this.monitor.recordResponse(requestId, {
+        status: 200,
+        statusText: 'OK',
+        headers: res.getHeaders() as Record<string, string>,
+        responseTime: 5,
+        endTime: Date.now(),
+        data: detailedStats,
+      });
+
+      res.json(detailedStats);
+    });
+
     this.app.get('/api/requests', (req, res) => {
       const requestId = this.monitor.recordRequest({
         method: 'GET',

@@ -1,5 +1,5 @@
 import WebSocket from 'ws';
-import { ApiRequest, ApiResponse, MonitorStats, TokenUsage, WebSocketMessage } from '../types/index.js';
+import { ApiRequest, ApiResponse, MonitorStats, TokenUsage, WebSocketMessage, ResponseTimeStats, TokenStats, DetailedStats } from '../types/index.js';
 
 export class ApiMonitor {
   private requests: ApiRequest[] = [];
@@ -149,5 +149,104 @@ export class ApiMonitor {
     this.requests = [];
     this.tokens = { input: 0, output: 0, total: 0 };
     this.responseTimes = [];
+  }
+
+  // 新增：计算响应时间统计
+  calculateResponseTimeStats(): ResponseTimeStats {
+    const validResponseTimes = this.responseTimes.filter(time => time > 0);
+
+    if (validResponseTimes.length === 0) {
+      return {
+        fastest: 0,
+        slowest: 0,
+        average: 0,
+        median: 0,
+        p95: 0,
+        p99: 0,
+      };
+    }
+
+    const sortedTimes = [...validResponseTimes].sort((a, b) => a - b);
+    const len = sortedTimes.length;
+
+    // 计算平均值
+    const average = validResponseTimes.reduce((sum, time) => sum + time, 0) / len;
+
+    // 计算中位数
+    const median = len % 2 === 0
+      ? (sortedTimes[len / 2 - 1]! + sortedTimes[len / 2]!) / 2
+      : sortedTimes[Math.floor(len / 2)]!;
+
+    // 计算百分位数
+    const p95Index = Math.ceil(len * 0.95) - 1;
+    const p99Index = Math.ceil(len * 0.99) - 1;
+    const p95 = sortedTimes[p95Index] || 0;
+    const p99 = sortedTimes[p99Index] || 0;
+
+    return {
+      fastest: sortedTimes[0]!,
+      slowest: sortedTimes[len - 1]!,
+      average: Math.round(average),
+      median: Math.round(median),
+      p95: Math.round(p95),
+      p99: Math.round(p99),
+    };
+  }
+
+  // 新增：计算Token使用统计
+  calculateTokenStats(): TokenStats {
+    const requestsWithTokens = this.requests.filter(req => req.tokenUsage);
+    const tokenCount = requestsWithTokens.length;
+
+    if (tokenCount === 0) {
+      return {
+        totalInput: this.tokens.input,
+        totalOutput: this.tokens.output,
+        totalTokens: this.tokens.total,
+        averageInputPerRequest: 0,
+        averageOutputPerRequest: 0,
+        averageTotalPerRequest: 0,
+        tokensPerResponseTime: 0,
+      };
+    }
+
+    const totalInput = this.tokens.input;
+    const totalOutput = this.tokens.output;
+    const totalTokens = this.tokens.total;
+
+    // 计算平均每请求的token使用量
+    const averageInputPerRequest = totalInput / tokenCount;
+    const averageOutputPerRequest = totalOutput / tokenCount;
+    const averageTotalPerRequest = totalTokens / tokenCount;
+
+    // 计算token效率（每毫秒响应时间产生的token数）
+    const avgResponseTime = this.responseTimes.length > 0
+      ? this.responseTimes.reduce((sum, time) => sum + time, 0) / this.responseTimes.length
+      : 1;
+
+    const tokensPerResponseTime = avgResponseTime > 0 ? totalTokens / avgResponseTime : 0;
+
+    return {
+      totalInput,
+      totalOutput,
+      totalTokens,
+      averageInputPerRequest: Math.round(averageInputPerRequest),
+      averageOutputPerRequest: Math.round(averageOutputPerRequest),
+      averageTotalPerRequest: Math.round(averageTotalPerRequest),
+      tokensPerResponseTime: Math.round(tokensPerResponseTime * 1000) / 1000, // 保留3位小数
+    };
+  }
+
+  // 新增：获取详细统计信息
+  getDetailedStats(): DetailedStats {
+    const basicStats = this.getStats();
+    const responseTimeStats = this.calculateResponseTimeStats();
+    const tokenStats = this.calculateTokenStats();
+
+    return {
+      ...basicStats,
+      responseTimeStats,
+      tokenStats,
+    };
   }
 }

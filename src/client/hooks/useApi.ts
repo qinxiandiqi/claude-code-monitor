@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { MonitorStats, ApiRequest } from '../../types/index.js';
+import { MonitorStats, ApiRequest, DetailedStats } from '../../types/index.js';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
@@ -56,9 +56,14 @@ export const useApi = () => {
     return request<{ status: string; timestamp: string }>('/health');
   }, [request]);
 
+  const getDetailedStats = useCallback(async (): Promise<ApiResponse<DetailedStats>> => {
+    return request<DetailedStats>('/detailed-stats');
+  }, [request]);
+
   return {
     loading,
     getStats,
+    getDetailedStats,
     getRequests,
     clearRequests,
     getHealth,

@@ -40,6 +40,30 @@ export interface MonitorStats {
   tokensPerMinute: number;
 }
 
+export interface ResponseTimeStats {
+  fastest: number;
+  slowest: number;
+  average: number;
+  median: number;
+  p95: number;
+  p99: number;
+}
+
+export interface TokenStats {
+  totalInput: number;
+  totalOutput: number;
+  totalTokens: number;
+  averageInputPerRequest: number;
+  averageOutputPerRequest: number;
+  averageTotalPerRequest: number;
+  tokensPerResponseTime: number;
+}
+
+export interface DetailedStats extends MonitorStats {
+  responseTimeStats: ResponseTimeStats;
+  tokenStats: TokenStats;
+}
+
 export interface WebSocketMessage {
   type: 'stats' | 'request' | 'connection' | 'error';
   data: any;
